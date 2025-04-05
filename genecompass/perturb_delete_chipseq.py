@@ -18,7 +18,8 @@ from tqdm.notebook import trange
 import warnings
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
-TOKEN_DICTIONARY_FILE = '../prior_knowledge/human_mouse_tokens.pickle'
+#TOKEN_DICTIONARY_FILE = '../prior_knowledge/human_mouse_tokens.pickle'
+TOKEN_DICTIONARY_FILE = './prior_knowledge/human_mouse_tokens.pickle'
 out = load_prior_embedding(token_dictionary_or_path=TOKEN_DICTIONARY_FILE)
 
 knowledges = dict()
@@ -45,7 +46,7 @@ def forward_pass_single_cell(model, example_cell, layer_to_quant):
     values = example_cell["values"][0].unsqueeze(0)
     species = torch.zeros(input_data.size()[0], 1).long()
     with torch.no_grad():
-        outputs = model.bert.forward(input_ids=input_data.long().to('cuda:1'), values=values.to('cuda:1'),species=species.to('cuda:1'))[0]
+        outputs = model.bert.forward(input_ids=input_data.long().to('cuda:0'), values=values.to('cuda:0'),species=species.to('cuda:0'))[0]
     emb = outputs[:,1:,:]
     emb = emb.squeeze(dim=0)
     del outputs
@@ -192,7 +193,7 @@ def get_cell_state_avg_embs(model,
             input_data_minibatch = state_minibatch["input_ids"]
             input_data_minibatch = pad_tensor_list(input_data_minibatch, max_len, token_dictionary)
             with torch.no_grad():
-                outputs = model(input_data_minibatch.long().to('cuda:1'))
+                outputs = model(input_data_minibatch.long().to('cuda:0'))
 
             state_embs_i = outputs.hidden_states[layer_to_quant]
             state_embs_list += [state_embs_i]
@@ -241,8 +242,8 @@ def quant_cos_sims(model,
         #     zeros = torch.zeros((input_data_minibatch.shape[0], 1, input_data_minibatch.shape[-1]))
         #     input_data_minibatch = torch.cat((input_data_minibatch, zeros), dim=1)
         with torch.no_grad():
-            outputs = model.bert.forward(input_data_minibatch[:,:,0].long().to('cuda:1'), input_data_minibatch[:,:,1].to('cuda:1'),
-                                         species=torch.zeros(input_data_minibatch.size()[0], 1).long().to('cuda:1'))[0]
+            outputs = model.bert.forward(input_data_minibatch[:,:,0].long().to('cuda:0'), input_data_minibatch[:,:,1].to('cuda:0'),
+                                         species=torch.zeros(input_data_minibatch.size()[0], 1).long().to('cuda:0'))[0]
         del input_data_minibatch
         del perturbation_minibatch
         # cosine similarity between original emb and batch items
@@ -254,7 +255,7 @@ def quant_cos_sims(model,
         if cell_states_to_model is None:
             minibatch_comparison = comparison_batch[i:max_range]
             if minibatch_comparison.shape[1]!=minibatch_emb.shape[1]:
-                zeros = torch.zeros((minibatch_comparison.shape[0], minibatch_emb.shape[1] - minibatch_comparison.shape[1], minibatch_comparison.shape[-1])).to('cuda:1')
+                zeros = torch.zeros((minibatch_comparison.shape[0], minibatch_emb.shape[1] - minibatch_comparison.shape[1], minibatch_comparison.shape[-1])).to('cuda:0')
                 minibatch_comparison = torch.cat((minibatch_comparison, zeros), dim=1)
             cos_sims += [cos(minibatch_emb, minibatch_comparison).to("cpu")]
         else:
@@ -586,7 +587,7 @@ class InSilicoPerturber:
                                                 output_hidden_states=True,
                                                 output_attentions=False)
         model.eval()
-        model = model.to("cuda:1")
+        model = model.to("cuda:0")
         return model
 
     # determine effect of perturbation on other genes
@@ -683,7 +684,7 @@ class InSilicoPerturber:
                                                indices_to_perturb,
                                                self.cell_states_to_model,
                                                state_embs_dict)
-                cos_sims_data = cos_sims_data.to("cuda:1")
+                cos_sims_data = cos_sims_data.to("cuda:0")
 
                 combo_perturbation_batch, combo_indices_to_perturb = make_perturbation_batch(example_cell,
                                                                                              self.perturb_type,
@@ -699,7 +700,7 @@ class InSilicoPerturber:
                                                      combo_indices_to_perturb,
                                                      self.cell_states_to_model,
                                                      state_embs_dict)
-                combo_cos_sims_data = combo_cos_sims_data.to("cuda:1")
+                combo_cos_sims_data = combo_cos_sims_data.to("cuda:0")
 
                 # update cos sims dict
                 # key is tuple of (perturbed_gene, "cell_emb") for avg cell emb change
