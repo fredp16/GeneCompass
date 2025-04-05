@@ -20,4 +20,4 @@ tdigest>=0.5.2
 torch>=1.13.1
 torchvision>=0.14.1
 tqdm>=4.65
-transformers==4.30.0
+transformers>=4.30.0
