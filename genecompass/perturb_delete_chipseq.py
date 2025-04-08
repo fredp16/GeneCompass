@@ -435,7 +435,8 @@ class InSilicoPerturber:
         if genes_to_perturb == "all":
             self.tokens_to_perturb = "all"
         else:
-            self.tokens_to_perturb = self.gene_token_dict[genes_to_perturb]
+            #self.tokens_to_perturb = self.gene_token_dict[genes_to_perturb]
+            self.tokens_to_perturb = [self.gene_token_dict.get(gene) for gene in self.genes_to_perturb]
 
     def validate_options(self):
         for attr_name, valid_options in self.valid_option_dict.items():
