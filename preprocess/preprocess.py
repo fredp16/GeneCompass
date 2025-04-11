@@ -223,16 +223,20 @@ def save_disk(patch_str,dataset,length):
 dict_path = 'scdata/dict/human_gene_median_after_filter.pickle' #中值字典路径
 
 # gene_token_path = 'scdata/h&m_token2000W.pickle' #token路径，需要改
-gene_token_path = 'scdata/dict/human_mouse_tokens.pickle'
+### gene_token_path = 'scdata/dict/human_mouse_tokens.pickle'
+gene_token_path = 'prior_knowledge/human_mouse_tokens.pickle'
 
 f_list = ["scdata/mouse_protein_coding.txt", "scdata/human_protein_coding.txt",
                "scdata/mouse_miRNA.txt", "scdata/human_miRNA.txt",
                "scdata/human_mitochondria.xlsx", "scdata/mouse_mitochondria.xlsx"]
 specices_str = 'human'
-gene_id_name_path = 'scdata/Gene_id_name_dict1.pickle'
+### gene_id_name_path = 'scdata/Gene_id_name_dict1.pickle'
+gene_id_name_path = 'prior_knowledge/gene_list/Gene_id_name_dict_human_mouse.pickle'
+
 gene_id_path = 'scdata/gene_id_hpromoter.pickle' #(promoter gen2vec 与protein和gene2vec交集)还需改
-dir_path = 'scdata/human_r8'
-out_path = 'scdata/output/'
+### dir_path = 'scdata/human_r8'
+dir_path = 'heart/input/heart.h5ad'
+out_path = 'heart/output/'
 
 with open(gene_id_name_path, 'rb') as f:
     dict1 = pickle.load(f)
@@ -253,6 +257,7 @@ with open(gene_id_path,'rb') as f:
 patch_id = 1
 
 print("Started:")
+'''
 df = pd.read_csv("SRR17066581_count.csv")
 # df = pd.read_csv("scdata/test/GSM6537936_count.csv")
 
@@ -263,6 +268,10 @@ df = df.rename(columns={
 adata = sc.AnnData(df)
 # original_df = df
 # print(len(adata.var))
+'''
+
+adata = anndata.read_h5ad("heart.h5ad")
+adata = heart[heart.obs['cell_states'] == 'foetal'].copy()
 
 # 基因名要进行映射
 #1.id_name translate
